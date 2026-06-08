@@ -48,10 +48,7 @@ public class UsuarioDAO implements Observable {
             while (rs.next()) lista.add(mapear(rs));
         } catch (SQLException e) { e.printStackTrace(); }
         return lista;
-        cascsa
-                casca
-                ca
-                        
+        
     }
 
     public boolean insertar(Usuario u) {
