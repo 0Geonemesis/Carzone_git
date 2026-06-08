@@ -1,145 +1,154 @@
 package carzone.dao;
 
-import carzone.model.Usuario;
-import carzone.singleton.ConexionDB;
-import carzone.observer.Observable;
-import carzone.observer.Observer;
-
+import carzone.modelo.Usuario;
+import carzone.patron.ConexionDB;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO de Usuario con Patrón Observer.
- */
-public class UsuarioDAO implements Observable {
+public class UsuarioDAO {
 
-    private final List<Observer> observers = new ArrayList<>();
-
-    // ── Observer ──────────────────────────────────────────────────────────────
-    @Override public void agregarObserver(Observer o)  { observers.add(o); }
-    @Override public void removerObserver(Observer o)  { observers.remove(o); }
-    @Override public void notificarObservers(String ev, Object d) {
-        for (Observer o : observers) o.actualizar(ev, d);
+    private Connection obtenerConexion() {
+        return ConexionDB.getInstancia().getConexion();
     }
 
-    // ── Autenticación ─────────────────────────────────────────────────────────
-    public Usuario autenticar(String usuario, String contrasena) {
-        String sql = "SELECT * FROM usuario WHERE nombre_usuario=? AND contrasena=? AND estado=1";
-        try (PreparedStatement ps = ConexionDB.getInstancia().getConexion().prepareStatement(sql)) {
-            ps.setString(1, usuario);
+    public Usuario autenticar(String nombreUsuario, String contrasena) {
+        String sql = "SELECT * FROM usuario WHERE nombre_usuario = ? AND contrasena = ? AND estado = TRUE";
+        try (PreparedStatement ps = obtenerConexion().prepareStatement(sql)) {
+            ps.setString(1, nombreUsuario);
             ps.setString(2, contrasena);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return mapear(rs);
+                return mapearUsuario(rs);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al autenticar usuario: " + e.getMessage());
         }
         return null;
     }
 
-    // ── CRUD ──────────────────────────────────────────────────────────────────
-    public List<Usuario> listar() {
+    public List<Usuario> listarTodos() {
         List<Usuario> lista = new ArrayList<>();
-        String sql = "SELECT * FROM usuario ORDER BY Id_usuario";
-        try (Statement st = ConexionDB.getInstancia().getConexion().createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) lista.add(mapear(rs));
-        } catch (SQLException e) { e.printStackTrace(); }
+        String sql = "SELECT * FROM usuario ORDER BY nombre_usuario";
+        try (Statement st = obtenerConexion().createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                lista.add(mapearUsuario(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al listar usuarios: " + e.getMessage());
+        }
         return lista;
-        
+    }
+
+    public Usuario buscarPorId(String idUsuario) {
+        String sql = "SELECT * FROM usuario WHERE id_usuario = ?";
+        try (PreparedStatement ps = obtenerConexion().prepareStatement(sql)) {
+            ps.setString(1, idUsuario);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapearUsuario(rs);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al buscar usuario: " + e.getMessage());
+        }
+        return null;
     }
 
     public boolean insertar(Usuario u) {
-        // Validaciones de tipo de dato / longitud / rango
-        if (!validar(u)) return false;
-        String sql = "INSERT INTO usuario VALUES(?,?,?,?,?)";
-        try (PreparedStatement ps = ConexionDB.getInstancia().getConexion().prepareStatement(sql)) {
+        String sql = "INSERT INTO usuario (id_usuario, nombre_usuario, contrasena, rol, estado) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = obtenerConexion().prepareStatement(sql)) {
             ps.setString(1, u.getIdUsuario());
             ps.setString(2, u.getNombreUsuario());
             ps.setString(3, u.getContrasena());
             ps.setString(4, u.getRol());
             ps.setBoolean(5, u.isEstado());
-            ps.executeUpdate();
-            notificarObservers("USUARIO_INSERTADO", u);
-            return true;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al insertar usuario: " + e.getMessage());
+        }
     }
 
     public boolean actualizar(Usuario u) {
-        if (!validar(u)) return false;
-        String sql = "UPDATE usuario SET nombre_usuario=?,contrasena=?,rol=?,estado=? WHERE Id_usuario=?";
-        try (PreparedStatement ps = ConexionDB.getInstancia().getConexion().prepareStatement(sql)) {
+        String sql = "UPDATE usuario SET nombre_usuario = ?, contrasena = ?, rol = ?, estado = ? WHERE id_usuario = ?";
+        try (PreparedStatement ps = obtenerConexion().prepareStatement(sql)) {
             ps.setString(1, u.getNombreUsuario());
             ps.setString(2, u.getContrasena());
             ps.setString(3, u.getRol());
             ps.setBoolean(4, u.isEstado());
             ps.setString(5, u.getIdUsuario());
-            ps.executeUpdate();
-            notificarObservers("USUARIO_ACTUALIZADO", u);
-            return true;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar usuario: " + e.getMessage());
+        }
     }
 
-    /** Eliminación lógica (estado=false) */
-    public boolean eliminarLogico(String id) {
-        String sql = "UPDATE usuario SET estado=0 WHERE Id_usuario=?";
-        try (PreparedStatement ps = ConexionDB.getInstancia().getConexion().prepareStatement(sql)) {
-            ps.setString(1, id);
-            ps.executeUpdate();
-            notificarObservers("USUARIO_ELIMINADO_LOGICO", id);
-            return true;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+    public boolean eliminarLogico(String idUsuario) {
+        String sql = "UPDATE usuario SET estado = FALSE WHERE id_usuario = ?";
+        try (PreparedStatement ps = obtenerConexion().prepareStatement(sql)) {
+            ps.setString(1, idUsuario);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al eliminar usuario: " + e.getMessage());
+        }
     }
 
-    /** Eliminación física */
-    public boolean eliminarFisico(String id) {
-        String sql = "DELETE FROM usuario WHERE Id_usuario=?";
-        try (PreparedStatement ps = ConexionDB.getInstancia().getConexion().prepareStatement(sql)) {
-            ps.setString(1, id);
-            ps.executeUpdate();
-            notificarObservers("USUARIO_ELIMINADO_FISICO", id);
-            return true;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+    public boolean eliminarFisico(String idUsuario) {
+        try {
+            PreparedStatement ps1 = obtenerConexion().prepareStatement(
+                    "DELETE FROM comprobante WHERE id_venta IN (SELECT id_venta FROM venta WHERE id_usuario = ?)");
+            ps1.setString(1, idUsuario);
+            ps1.executeUpdate();
+
+            PreparedStatement ps2 = obtenerConexion().prepareStatement(
+                    "DELETE FROM venta WHERE id_usuario = ?");
+            ps2.setString(1, idUsuario);
+            ps2.executeUpdate();
+
+            PreparedStatement ps3 = obtenerConexion().prepareStatement(
+                    "DELETE FROM usuario WHERE id_usuario = ?");
+            ps3.setString(1, idUsuario);
+            return ps3.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al eliminar físicamente usuario: " + e.getMessage());
+        }
     }
 
-    public List<Usuario> buscar(String texto) {
+    public String generarNuevoId() {
+        String sql = "SELECT MAX(id_usuario) FROM usuario";
+        try (Statement st = obtenerConexion().createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            if (rs.next() && rs.getString(1) != null) {
+                int num = Integer.parseInt(rs.getString(1).substring(3)) + 1;
+                return String.format("USR%03d", num);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al generar ID: " + e.getMessage());
+        }
+        return "USR001";
+    }
+
+    public List<Usuario> buscarPorNombre(String nombre) {
         List<Usuario> lista = new ArrayList<>();
-        String sql = "SELECT * FROM usuario WHERE Id_usuario LIKE ? OR nombre_usuario LIKE ? OR rol LIKE ?";
-        String like = "%" + texto + "%";
-        try (PreparedStatement ps = ConexionDB.getInstancia().getConexion().prepareStatement(sql)) {
-            ps.setString(1, like); ps.setString(2, like); ps.setString(3, like);
+        String sql = "SELECT * FROM usuario WHERE nombre_usuario LIKE ?";
+        try (PreparedStatement ps = obtenerConexion().prepareStatement(sql)) {
+            ps.setString(1, "%" + nombre + "%");
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) lista.add(mapear(rs));
-        } catch (SQLException e) { e.printStackTrace(); }
+            while (rs.next()) {
+                lista.add(mapearUsuario(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al buscar usuarios: " + e.getMessage());
+        }
         return lista;
     }
 
-    public boolean existeId(String id) {
-        String sql = "SELECT Id_usuario FROM usuario WHERE Id_usuario=?";
-        try (PreparedStatement ps = ConexionDB.getInstancia().getConexion().prepareStatement(sql)) {
-            ps.setString(1, id);
-            return ps.executeQuery().next();
-        } catch (SQLException e) { e.printStackTrace(); return false; }
-    }
-
-    // ── Validaciones ──────────────────────────────────────────────────────────
-    private boolean validar(Usuario u) {
-        if (u.getIdUsuario()     == null || u.getIdUsuario().trim().isEmpty()     || u.getIdUsuario().length()     > 6)  return false;
-        if (u.getNombreUsuario() == null || u.getNombreUsuario().trim().isEmpty() || u.getNombreUsuario().length() > 50) return false;
-        if (u.getContrasena()    == null || u.getContrasena().trim().isEmpty()    || u.getContrasena().length()    > 50) return false;
-        if (u.getRol()           == null || u.getRol().trim().isEmpty()           || u.getRol().length()           > 20) return false;
-        return true;
-    }
-
-    private Usuario mapear(ResultSet rs) throws SQLException {
+    private Usuario mapearUsuario(ResultSet rs) throws SQLException {
         return new Usuario(
-            rs.getString("Id_usuario"),
-            rs.getString("nombre_usuario"),
-            rs.getString("contrasena"),
-            rs.getString("rol"),
-            rs.getBoolean("estado")
+                rs.getString("id_usuario"),
+                rs.getString("nombre_usuario"),
+                rs.getString("contrasena"),
+                rs.getString("rol"),
+                rs.getBoolean("estado")
         );
     }
 }
