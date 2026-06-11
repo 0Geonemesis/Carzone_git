@@ -2,6 +2,7 @@ package carzone.dao;
 
 import carzone.modelo.Usuario;
 import carzone.patron.ConexionDB;
+import carzone.patron.ValidadorContrasena;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +14,12 @@ public class UsuarioDAO {
     }
 
     public Usuario autenticar(String nombreUsuario, String contrasena) {
-        String sql = "SELECT * FROM usuario WHERE nombre_usuario = ? AND contrasena = ? AND estado = TRUE";
+        if (!ValidadorContrasena.esValida(contrasena)) {
+            return null;
+        }
+        String sql = "SELECT * FROM usuario WHERE nombre_usuario = ? AND estado = TRUE";
         try (PreparedStatement ps = obtenerConexion().prepareStatement(sql)) {
             ps.setString(1, nombreUsuario);
-            ps.setString(2, contrasena);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return mapearUsuario(rs);

@@ -21,27 +21,27 @@ public class FrmMenuPrincipal extends JFrame {
         setResizable(false);
 
         JPanel panelPrincipal = new JPanel(null);
-        panelPrincipal.setBackground(new Color(245, 245, 245));
+        panelPrincipal.setBackground(new Color(230, 235, 245));
 
         JPanel panelHeader = new JPanel(null);
         panelHeader.setBounds(0, 0, 700, 70);
-        panelHeader.setBackground(new Color(30, 30, 50));
+        panelHeader.setBackground(new Color(15, 20, 40));
 
-        JLabel lblTitulo = new JLabel("CARZONE - Panel Principal");
+        JLabel lblTitulo = new JLabel("CARZONE");
         lblTitulo.setBounds(20, 10, 400, 30);
-        lblTitulo.setFont(new Font("Arial", Font.BOLD, 20));
-        lblTitulo.setForeground(Color.WHITE);
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 22));
+        lblTitulo.setForeground(new Color(255, 200, 50));
 
-        JLabel lblUsuarioInfo = new JLabel("Usuario: " + usuarioActual.getNombreUsuario() + " | Rol: " + usuarioActual.getRol());
+        JLabel lblUsuarioInfo = new JLabel("Usuario: " + usuarioActual.getNombreUsuario() + "   |   Rol: " + usuarioActual.getRol().toUpperCase());
         lblUsuarioInfo.setBounds(20, 42, 500, 18);
         lblUsuarioInfo.setFont(new Font("Arial", Font.PLAIN, 12));
-        lblUsuarioInfo.setForeground(new Color(180, 180, 200));
+        lblUsuarioInfo.setForeground(new Color(150, 200, 255));
 
         JButton btnCerrarSesion = new JButton("Cerrar Sesión");
         btnCerrarSesion.setBounds(570, 20, 110, 30);
         btnCerrarSesion.setFont(new Font("Arial", Font.BOLD, 11));
         btnCerrarSesion.setBackground(new Color(200, 50, 50));
-        btnCerrarSesion.setForeground(Color.WHITE);
+        btnCerrarSesion.setForeground(Color.BLACK);
         btnCerrarSesion.setFocusPainted(false);
         btnCerrarSesion.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -52,18 +52,16 @@ public class FrmMenuPrincipal extends JFrame {
         JLabel lblModulos = new JLabel("Módulos del Sistema");
         lblModulos.setBounds(0, 90, 700, 25);
         lblModulos.setFont(new Font("Arial", Font.BOLD, 16));
+        lblModulos.setForeground(new Color(30, 30, 80));
         lblModulos.setHorizontalAlignment(SwingConstants.CENTER);
 
-        JButton btnAutos = crearBotonModulo("Mantenimiento de Autos", new Color(40, 100, 160), 100, 135);
-        JButton btnUsuarios = crearBotonModulo("Mantenimiento de Usuarios", new Color(40, 140, 80), 400, 135);
-
-        JButton btnCambiarContrasena = crearBotonModulo("Cambiar mi Contraseña", new Color(140, 80, 20), 250, 260);
+        JButton btnAutos = crearBotonModulo("🚗  Mantenimiento de Autos", new Color(25, 85, 140), Color.WHITE, 100, 135);
+        JButton btnUsuarios = crearBotonModulo("👤  Mantenimiento de Usuarios", new Color(30, 120, 60), Color.WHITE, 400, 135);
 
         panelPrincipal.add(panelHeader);
         panelPrincipal.add(lblModulos);
         panelPrincipal.add(btnAutos);
         panelPrincipal.add(btnUsuarios);
-        panelPrincipal.add(btnCambiarContrasena);
 
         add(panelPrincipal);
 
@@ -84,18 +82,17 @@ public class FrmMenuPrincipal extends JFrame {
             }
         });
 
-        btnCambiarContrasena.addActionListener(e -> {
-            new FrmCambiarContrasena(usuarioActual).setVisible(true);
-        });
     }
 
-    private JButton crearBotonModulo(String texto, Color color, int x, int y) {
+    private JButton crearBotonModulo(String texto, Color colorFondo, Color colorTexto, int x, int y) {
         JButton btn = new JButton("<html><center>" + texto + "</center></html>");
         btn.setBounds(x, y, 200, 90);
-        btn.setFont(new Font("Arial", Font.BOLD, 13));
-        btn.setBackground(color);
-        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Arial", Font.BOLD, 14));
+        btn.setBackground(colorFondo);
+        btn.setForeground(colorTexto);
         btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setOpaque(true);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
     }

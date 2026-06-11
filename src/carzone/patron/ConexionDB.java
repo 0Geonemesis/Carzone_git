@@ -9,7 +9,7 @@ public class ConexionDB {
     private static ConexionDB instancia;
     private Connection conexion;
 
-    private static final String URL = "jdbc:mysql://localhost:3306/carzone_bda?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    private static final String URL = "jdbc:mysql://localhost:3306/carzone_bdd";
     private static final String USUARIO = "root";
     private static final String CONTRASENA = "";
 

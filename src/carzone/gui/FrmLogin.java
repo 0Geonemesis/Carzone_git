@@ -75,7 +75,7 @@ public class FrmLogin extends JFrame {
         btnIngresar.setBounds(60, 265, 135, 40);
         btnIngresar.setFont(new Font("Arial", Font.BOLD, 13));
         btnIngresar.setBackground(new Color(30, 30, 50));
-        btnIngresar.setForeground(Color.WHITE);
+        btnIngresar.setForeground(Color.BLACK);
         btnIngresar.setFocusPainted(false);
         btnIngresar.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -83,7 +83,7 @@ public class FrmLogin extends JFrame {
         btnCancelar.setBounds(225, 265, 135, 40);
         btnCancelar.setFont(new Font("Arial", Font.BOLD, 13));
         btnCancelar.setBackground(new Color(200, 50, 50));
-        btnCancelar.setForeground(Color.WHITE);
+        btnCancelar.setForeground(Color.RED);
         btnCancelar.setFocusPainted(false);
         btnCancelar.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
