@@ -13,6 +13,9 @@ public class Auto {
     private String estado;
     private String codigo4Cifras;
 
+    private int stock;
+    private boolean disponibilidad = true;
+
     public Auto() {
     }
 
@@ -89,6 +92,22 @@ public class Auto {
 
     public void setCodigo4Cifras(String codigo4Cifras) {
         this.codigo4Cifras = codigo4Cifras;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public boolean isDisponibilidad() {
+        return disponibilidad;
+    }
+
+    public void setDisponibilidad(boolean disponibilidad) {
+        this.disponibilidad = disponibilidad;
     }
 
     @Override

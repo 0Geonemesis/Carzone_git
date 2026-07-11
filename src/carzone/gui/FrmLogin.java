@@ -57,8 +57,8 @@ public class FrmLogin extends JFrame {
         txtUsuario.setBounds(60, 135, 300, 34);
         txtUsuario.setFont(new Font("Arial", Font.PLAIN, 13));
         txtUsuario.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(180, 180, 180)),
-            BorderFactory.createEmptyBorder(5, 8, 5, 8)));
+                BorderFactory.createLineBorder(new Color(180, 180, 180)),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)));
 
         JLabel lblContrasena = new JLabel("Contraseña:");
         lblContrasena.setBounds(60, 182, 120, 22);
@@ -68,8 +68,8 @@ public class FrmLogin extends JFrame {
         txtContrasena.setBounds(60, 207, 300, 34);
         txtContrasena.setFont(new Font("Arial", Font.PLAIN, 13));
         txtContrasena.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(180, 180, 180)),
-            BorderFactory.createEmptyBorder(5, 8, 5, 8)));
+                BorderFactory.createLineBorder(new Color(180, 180, 180)),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)));
 
         btnIngresar = new JButton("INGRESAR");
         btnIngresar.setBounds(60, 265, 135, 40);
@@ -103,7 +103,9 @@ public class FrmLogin extends JFrame {
         txtContrasena.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) accionIngresar();
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    accionIngresar();
+                }
             }
         });
     }
@@ -136,7 +138,8 @@ public class FrmLogin extends JFrame {
     private void configurarVentana() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     public static void main(String[] args) {

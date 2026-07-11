@@ -77,7 +77,6 @@ public class FrmMantenimientoUsuarios extends JFrame {
         txtContrasena.setFont(new Font("Arial", Font.PLAIN, 12));
         panelForm.add(txtContrasena);
 
-
         cmbRol = new JComboBox<>(new String[]{"administrador", "vendedor"});
         cmbRol.setBounds(130, 165, 190, 28);
         cmbRol.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -117,7 +116,7 @@ public class FrmMantenimientoUsuarios extends JFrame {
         btnBuscar.setBounds(290, 20, 100, 28);
         btnBuscar.setFont(new Font("Arial", Font.BOLD, 12));
         btnBuscar.setBackground(new Color(40, 140, 80));
-        btnBuscar.setForeground(Color.WHITE);
+        btnBuscar.setForeground(Color.BLACK);
         btnBuscar.setFocusPainted(false);
         btnBuscar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         panelBusqueda.add(btnBuscar);
@@ -326,7 +325,7 @@ public class FrmMantenimientoUsuarios extends JFrame {
         btn.setBounds(x, y, 95, 32);
         btn.setFont(new Font("Arial", Font.BOLD, 11));
         btn.setBackground(color);
-        btn.setForeground(Color.WHITE);
+        btn.setForeground(Color.BLACK);
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         panel.add(btn);

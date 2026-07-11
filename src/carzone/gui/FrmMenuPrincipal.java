@@ -15,7 +15,7 @@ public class FrmMenuPrincipal extends JFrame {
 
     private void initComponents() {
         setTitle("CarZone - Menú Principal");
-        setSize(700, 480);
+        setSize(820, 590);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
@@ -24,7 +24,7 @@ public class FrmMenuPrincipal extends JFrame {
         panelPrincipal.setBackground(new Color(230, 235, 245));
 
         JPanel panelHeader = new JPanel(null);
-        panelHeader.setBounds(0, 0, 700, 70);
+        panelHeader.setBounds(0, 0, 820, 70);
         panelHeader.setBackground(new Color(15, 20, 40));
 
         JLabel lblTitulo = new JLabel("CARZONE");
@@ -38,7 +38,7 @@ public class FrmMenuPrincipal extends JFrame {
         lblUsuarioInfo.setForeground(new Color(150, 200, 255));
 
         JButton btnCerrarSesion = new JButton("Cerrar Sesión");
-        btnCerrarSesion.setBounds(570, 20, 110, 30);
+        btnCerrarSesion.setBounds(690, 20, 110, 30);
         btnCerrarSesion.setFont(new Font("Arial", Font.BOLD, 11));
         btnCerrarSesion.setBackground(new Color(200, 50, 50));
         btnCerrarSesion.setForeground(Color.BLACK);
@@ -50,18 +50,22 @@ public class FrmMenuPrincipal extends JFrame {
         panelHeader.add(btnCerrarSesion);
 
         JLabel lblModulos = new JLabel("Módulos del Sistema");
-        lblModulos.setBounds(0, 90, 700, 25);
+        lblModulos.setBounds(0, 90, 820, 25);
         lblModulos.setFont(new Font("Arial", Font.BOLD, 16));
         lblModulos.setForeground(new Color(30, 30, 80));
         lblModulos.setHorizontalAlignment(SwingConstants.CENTER);
 
-        JButton btnAutos = crearBotonModulo("🚗  Mantenimiento de Autos", new Color(25, 85, 140), Color.WHITE, 100, 135);
-        JButton btnUsuarios = crearBotonModulo("👤  Mantenimiento de Usuarios", new Color(30, 120, 60), Color.WHITE, 400, 135);
+        JButton btnAutos = crearBotonModulo("🚗  Mantenimiento\nde Autos", new Color(25, 85, 140), Color.WHITE, 80, 135);
+        JButton btnVentas = crearBotonModulo("💰  Módulo\nde Ventas", new Color(140, 80, 20), Color.WHITE, 320, 135);
+        JButton btnUsuarios = crearBotonModulo("👤  Mantenimiento\nde Usuarios", new Color(30, 120, 60), Color.WHITE, 560, 135);
+        JButton btnReportes = crearBotonModulo("📊  Módulo\nde Reportes", new Color(100, 40, 130), Color.WHITE, 320, 245);
 
         panelPrincipal.add(panelHeader);
         panelPrincipal.add(lblModulos);
         panelPrincipal.add(btnAutos);
+        panelPrincipal.add(btnVentas);
         panelPrincipal.add(btnUsuarios);
+        panelPrincipal.add(btnReportes);
 
         add(panelPrincipal);
 
@@ -70,9 +74,9 @@ public class FrmMenuPrincipal extends JFrame {
             new FrmLogin().setVisible(true);
         });
 
-        btnAutos.addActionListener(e -> {
-            new FrmMantenimientoAutos(usuarioActual).setVisible(true);
-        });
+        btnAutos.addActionListener(e -> new FrmMantenimientoAutos(usuarioActual).setVisible(true));
+
+        btnVentas.addActionListener(e -> new FrmVentas(usuarioActual).setVisible(true));
 
         btnUsuarios.addActionListener(e -> {
             if ("administrador".equals(usuarioActual.getRol())) {
@@ -82,10 +86,11 @@ public class FrmMenuPrincipal extends JFrame {
             }
         });
 
+        btnReportes.addActionListener(e -> new FrmReportes(usuarioActual).setVisible(true));
     }
 
     private JButton crearBotonModulo(String texto, Color colorFondo, Color colorTexto, int x, int y) {
-        JButton btn = new JButton("<html><center>" + texto + "</center></html>");
+        JButton btn = new JButton("<html><center>" + texto.replace("\n", "<br>") + "</center></html>");
         btn.setBounds(x, y, 200, 90);
         btn.setFont(new Font("Arial", Font.BOLD, 14));
         btn.setBackground(colorFondo);

@@ -14,13 +14,70 @@ public class AutoDAO {
 
     public List<Auto> listarTodos() {
         List<Auto> lista = new ArrayList<>();
-        String sql = "SELECT * FROM auto ORDER BY marca, modelo";
+        String sql = "SELECT a.*, i.stock, i.disponibilidad "
+                + "FROM auto a "
+                + "INNER JOIN inventario i ON a.id_auto = i.id_auto "
+                + "WHERE i.disponibilidad = TRUE "
+                + "ORDER BY a.marca, a.modelo";
         try (Statement st = obtenerConexion().createStatement(); ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 lista.add(mapearAuto(rs));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al listar autos: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    public List<Auto> listarSoloTablaAuto() {
+        List<Auto> lista = new ArrayList<>();
+        String sql = "SELECT id_auto, marca, modelo, anio, color, precio, estado, codigo_4_cifras "
+                + "FROM auto WHERE estado <> 'eliminado' ORDER BY marca, modelo";
+        try (Statement st = obtenerConexion().createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                lista.add(mapearAuto(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al listar autos (tabla simple): " + e.getMessage());
+        }
+        return lista;
+    }
+
+    public List<Auto> buscarSoloTablaAuto(String marca, String modelo, int anio, String color) {
+        List<Auto> lista = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT id_auto, marca, modelo, anio, color, precio, estado, codigo_4_cifras "
+                + "FROM auto WHERE estado <> 'eliminado'");
+        List<Object> params = new ArrayList<>();
+
+        if (marca != null && !marca.isEmpty()) {
+            sql.append(" AND marca LIKE ?");
+            params.add("%" + marca + "%");
+        }
+        if (modelo != null && !modelo.isEmpty()) {
+            sql.append(" AND modelo LIKE ?");
+            params.add("%" + modelo + "%");
+        }
+        if (anio > 0) {
+            sql.append(" AND anio = ?");
+            params.add(anio);
+        }
+        if (color != null && !color.isEmpty()) {
+            sql.append(" AND color LIKE ?");
+            params.add("%" + color + "%");
+        }
+        sql.append(" ORDER BY marca, modelo");
+
+        try (PreparedStatement ps = obtenerConexion().prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                lista.add(mapearAuto(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al buscar autos (tabla simple): " + e.getMessage());
         }
         return lista;
     }
@@ -41,25 +98,30 @@ public class AutoDAO {
 
     public List<Auto> buscarPorCriteria(String marca, String modelo, int anio, String color) {
         List<Auto> lista = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM auto WHERE 1=1");
+        StringBuilder sql = new StringBuilder(
+                "SELECT a.*, i.stock, i.disponibilidad "
+                + "FROM auto a "
+                + "INNER JOIN inventario i ON a.id_auto = i.id_auto "
+                + "WHERE i.disponibilidad = TRUE");
         List<Object> params = new ArrayList<>();
 
         if (marca != null && !marca.isEmpty()) {
-            sql.append(" AND marca LIKE ?");
+            sql.append(" AND a.marca LIKE ?");
             params.add("%" + marca + "%");
         }
         if (modelo != null && !modelo.isEmpty()) {
-            sql.append(" AND modelo LIKE ?");
+            sql.append(" AND a.modelo LIKE ?");
             params.add("%" + modelo + "%");
         }
         if (anio > 0) {
-            sql.append(" AND anio = ?");
+            sql.append(" AND a.anio = ?");
             params.add(anio);
         }
         if (color != null && !color.isEmpty()) {
-            sql.append(" AND color LIKE ?");
+            sql.append(" AND a.color LIKE ?");
             params.add("%" + color + "%");
         }
+        sql.append(" ORDER BY a.marca, a.modelo");
 
         try (PreparedStatement ps = obtenerConexion().prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -118,13 +180,82 @@ public class AutoDAO {
     }
 
     public boolean eliminarLogico(String idAuto) {
-        String sql = "UPDATE auto SET estado = 'vendido' WHERE id_auto = ?";
-        try (PreparedStatement ps = obtenerConexion().prepareStatement(sql)) {
-            ps.setString(1, idAuto);
-            return ps.executeUpdate() > 0;
+        Connection con = obtenerConexion();
+        try {
+            con.setAutoCommit(false);
+            try (PreparedStatement ps1 = con.prepareStatement(
+                    "UPDATE inventario SET disponibilidad = FALSE WHERE id_auto = ?")) {
+                ps1.setString(1, idAuto);
+                ps1.executeUpdate();
+            }
+            boolean ok;
+            try (PreparedStatement ps2 = con.prepareStatement(
+                    "UPDATE auto SET estado = 'eliminado' WHERE id_auto = ?")) {
+                ps2.setString(1, idAuto);
+                ok = ps2.executeUpdate() > 0;
+            }
+            con.commit();
+            return ok;
         } catch (SQLException e) {
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+            }
             throw new RuntimeException("Error al eliminar lógicamente auto: " + e.getMessage());
+        } finally {
+            try {
+                con.setAutoCommit(true);
+            } catch (SQLException ex) {
+            }
         }
+    }
+
+    public boolean reactivar(String idAuto) {
+        Connection con = obtenerConexion();
+        try {
+            con.setAutoCommit(false);
+            try (PreparedStatement ps1 = con.prepareStatement(
+                    "UPDATE inventario SET disponibilidad = TRUE WHERE id_auto = ?")) {
+                ps1.setString(1, idAuto);
+                ps1.executeUpdate();
+            }
+            boolean ok;
+            try (PreparedStatement ps2 = con.prepareStatement(
+                    "UPDATE auto SET estado = 'disponible' WHERE id_auto = ?")) {
+                ps2.setString(1, idAuto);
+                ok = ps2.executeUpdate() > 0;
+            }
+            con.commit();
+            return ok;
+        } catch (SQLException e) {
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+            }
+            throw new RuntimeException("Error al reactivar auto: " + e.getMessage());
+        } finally {
+            try {
+                con.setAutoCommit(true);
+            } catch (SQLException ex) {
+            }
+        }
+    }
+
+    public List<Auto> listarEliminadosLogicamente() {
+        List<Auto> lista = new ArrayList<>();
+        String sql = "SELECT a.*, i.stock, i.disponibilidad "
+                + "FROM auto a "
+                + "INNER JOIN inventario i ON a.id_auto = i.id_auto "
+                + "WHERE i.disponibilidad = FALSE "
+                + "ORDER BY a.marca, a.modelo";
+        try (Statement st = obtenerConexion().createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                lista.add(mapearAuto(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al listar autos eliminados: " + e.getMessage());
+        }
+        return lista;
     }
 
     public boolean eliminarFisico(String idAuto) {
@@ -174,7 +305,7 @@ public class AutoDAO {
                 ps.setString(1, idAuto);
                 ResultSet rs = ps.executeQuery();
                 if (rs.next() && rs.getInt(1) == 0) {
-                    String sqlInv = "INSERT INTO inventario (id_inventario, id_auto, cantidad, ubicacion) VALUES (?, ?, 1, 'Por asignar')";
+                    String sqlInv = "INSERT INTO inventario (id_inventario, id_auto, stock, disponibilidad) VALUES (?, ?, 1, TRUE)";
                     String idInv = generarIdInventario();
                     try (PreparedStatement ps2 = obtenerConexion().prepareStatement(sqlInv)) {
                         ps2.setString(1, idInv);
@@ -202,7 +333,7 @@ public class AutoDAO {
     }
 
     private Auto mapearAuto(ResultSet rs) throws SQLException {
-        return new Auto(
+        Auto auto = new Auto(
                 rs.getString("id_auto"),
                 rs.getString("marca"),
                 rs.getString("modelo"),
@@ -212,5 +343,23 @@ public class AutoDAO {
                 rs.getString("estado"),
                 rs.getString("codigo_4_cifras")
         );
+
+        if (tieneColumna(rs, "stock")) {
+            auto.setStock(rs.getInt("stock"));
+        }
+        if (tieneColumna(rs, "disponibilidad")) {
+            auto.setDisponibilidad(rs.getBoolean("disponibilidad"));
+        }
+        return auto;
+    }
+
+    private boolean tieneColumna(ResultSet rs, String nombreColumna) throws SQLException {
+        ResultSetMetaData meta = rs.getMetaData();
+        for (int i = 1; i <= meta.getColumnCount(); i++) {
+            if (meta.getColumnLabel(i).equalsIgnoreCase(nombreColumna)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -20,10 +20,9 @@ public class ValidadorContrasena {
                 tieneMinus = true;
             } else if (Character.isDigit(c)) {
                 tieneNumero = true;
+            } else if (!Character.isLetterOrDigit(c)) {
+                tieneEspecial = true;
             }
-            else if (!Character.isLetterOrDigit(c)) {
-            tieneEspecial = true;
-}
         }
         return tieneMayus && tieneMinus && tieneNumero && tieneEspecial;
     }
